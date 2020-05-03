@@ -1,7 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8" ?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
     <groupId>com.telstra.code-challenge</groupId>
     <artifactId>parent</artifactId>
@@ -11,6 +9,10 @@
 
   <artifactId>functional-tests</artifactId>
 
+  <properties>
+    <microservice.port>8080</microservice.port>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -18,216 +20,97 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-test</artifactId>
-      <version>4.3.14.RELEASE</version>
+      <groupId>com.intuit.karate</groupId>
+      <artifactId>karate-apache</artifactId>
+      <version>${karate.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>info.cukes</groupId>
-      <artifactId>cucumber-java</artifactId>
-      <version>1.2.5</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>info.cukes</groupId>
-      <artifactId>cucumber-junit</artifactId>
-      <version>1.2.5</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>info.cukes</groupId>
-      <artifactId>cucumber-spring</artifactId>
-      <version>1.2.4</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.12</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.jayway.jsonpath</groupId>
-      <artifactId>json-path-assert</artifactId>
-      <version>2.4.0</version>
-      <scope>test</scope>
-    </dependency>
-    <!-- Following dependency is a work around for an Intellij issue running features directly -->
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-tx</artifactId>
-      <version>4.3.12.RELEASE</version>
+      <groupId>com.intuit.karate</groupId>
+      <artifactId>karate-junit5</artifactId>
+      <version>${karate.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
 
   <build>
+    <!-- See https://github.com/intuit/karate#folder-structure for explination -->
+    <testResources>
+      <testResource>
+        <directory>src/test/java</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </testResource>
+    </testResources>
     <plugins>
-      <!-- JACOCO -->
+      <!-- This brings in the microservice to run -->
       <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <configuration>
-          <includes>
-            <include>com/telstra/codechallenge/**</include>
-          </includes>
-          <excludes>
-            <exclude>**/functionaltests/**</exclude>
-          </excludes>
-        </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
         <executions>
           <execution>
-            <id>prepare-agent-integration</id>
-            <phase>prepare-package</phase>
+            <id>copy</id>
+            <phase>package</phase>
             <goals>
-              <goal>prepare-agent-integration</goal>
+              <goal>copy</goal>
             </goals>
             <configuration>
-              <destFile>../microservice/target/jacoco-it.exec</destFile>
-            </configuration>
-          </execution>
-          <execution>
-            <id>post-integration-report</id>
-            <phase>post-integration-test</phase>
-            <goals>
-              <goal>report-integration</goal>
-            </goals>
-            <configuration>
-              <dataFile>../microservice/target/jacoco-it.exec</dataFile>
-            </configuration>
-          </execution>
-          <execution>
-            <id>post-integration-merge</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>merge</goal>
-            </goals>
-            <configuration>
-              <excludes>
-                <exclude>**/Test*</exclude>
-              </excludes>
-              <fileSets>
-                <fileSet>
-                  <directory>${project.basedir}/../microservice/target</directory>
-                  <includes>
-                    <include>*.exec</include>
-                  </includes>
-                </fileSet>
-              </fileSets>
-              <destFile>../target/jacoco-merged.exec</destFile>
-            </configuration>
-          </execution>
-          <execution>
-            <id>merged-report</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>report</goal>
-            </goals>
-            <configuration>
-              <title>Merged Report</title>
-              <outputDirectory>../target/jacoco-merged</outputDirectory>
-              <dataFile>../target/jacoco-merged.exec</dataFile>
-            </configuration>
-          </execution>
-          <execution>
-            <id>default-check</id>
-            <phase>install</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <configuration>
-              <dataFile>../target/jacoco-merged.exec</dataFile>
-              <haltOnFailure>false</haltOnFailure>
-              <rules>
-                <rule>
-                  <element>BUNDLE</element>
-                  <limits>
-                    <limit>
-                      <counter>COMPLEXITY</counter>
-                      <value>COVEREDRATIO</value>
-                      <minimum>0.70</minimum>
-                    </limit>
-                    <limit>
-                      <counter>CLASS</counter>
-                      <value>COVEREDCOUNT</value>
-                      <minimum>1</minimum>
-                    </limit>
-                  </limits>
-                </rule>
-              </rules>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>microservice</artifactId>
+                  <version>${project.version}</version>
+                  <type>jar</type>
+                  <destFileName>app.jar</destFileName>
+                  <classifier>exec</classifier>
+                </artifactItem>
+              </artifactItems>
+              <outputDirectory>${project.build.directory}</outputDirectory>
+              <stripVersion>true</stripVersion>
             </configuration>
           </execution>
         </executions>
       </plugin>
+      <!-- This plugin starts the microservice before the integration tests -->
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
+        <groupId>com.bazaarvoice.maven.plugins</groupId>
+        <artifactId>process-exec-maven-plugin</artifactId>
+        <version>0.7</version>
         <executions>
+          <!-- This starts the microservcie -->
           <execution>
-            <id>reserve-tomcat-port</id>
-            <goals>
-              <goal>reserve-network-port</goal>
-            </goals>
-            <phase>process-resources</phase>
-            <configuration>
-              <portNames>
-                <portName>tomcat.http.port</portName>
-              </portNames>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-        <configuration>
-          <mainClass>com.telstra.codechallenge.MicroServiceMain</mainClass>
-        </configuration>
-        <executions>
-          <execution>
-            <id>pre-integration-test</id>
+            <id>microservice-process</id>
+            <phase>pre-integration-test</phase>
             <goals>
               <goal>start</goal>
             </goals>
             <configuration>
-              <jvmArguments>${argLine}</jvmArguments>
+              <name>microservice</name>
+              <waitForInterrupt>false</waitForInterrupt>
+              <healthcheckUrl>http://localhost:${microservice.port}/actuator/health</healthcheckUrl>
+              <waitAfterLaunch>30</waitAfterLaunch>
               <arguments>
-                <argument>--server.port=${tomcat.http.port}</argument>
-                <argument>
-                  --spring.config.location=file://${basedir}/src/test/resources/application.properties
-                </argument>
+                <argument>java</argument>
+                <argument>-jar</argument>
+                <argument>${project.build.directory}/app.jar</argument>
+                <argument>--server.port=${microservice.port}</argument>
               </arguments>
             </configuration>
           </execution>
+          <!--Stop all processes in reverse order-->
           <execution>
-            <id>post-integration-test</id>
+            <id>stop-all</id>
+            <phase>post-integration-test</phase>
             <goals>
-              <goal>stop</goal>
+              <goal>stop-all</goal>
             </goals>
           </execution>
         </executions>
       </plugin>
-      <!-- Surefire has no UT's to run -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <excludes>
-            <exclude>**/functionaltests/*Tests.java</exclude>
-          </excludes>
-        </configuration>
-      </plugin>
-      <!-- Failsafe runs the FT's -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <configuration>
-          <forkCount>0</forkCount>
-          <excludes>
-            <exclude>**/functionaltests/*Tests.java</exclude>
-          </excludes>
-        </configuration>
         <executions>
           <execution>
             <goals>
@@ -236,40 +119,7 @@
             </goals>
             <configuration>
               <failIfNoTests>true</failIfNoTests>
-              <argLine>${argLine}</argLine>
-              <excludes>
-                <exclude>none</exclude>
-              </excludes>
-              <includes>
-                <include>**/functionaltests/CucumberMain.java</include>
-              </includes>
-              <systemProperties>
-                <test.server.transport>http</test.server.transport>
-                <test.server.host>localhost</test.server.host>
-                <test.server.port>${tomcat.http.port}</test.server.port>
-                <test.server.context>/</test.server.context>
-              </systemProperties>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>copy-class-files</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <overwrite>false</overwrite>
-              <resources>
-                <resource>
-                  <directory>../microservice/target/classes</directory>
-                </resource>
-              </resources>
-              <outputDirectory>${project.build.directory}/classes</outputDirectory>
+              <systemProperties></systemProperties>
             </configuration>
           </execution>
         </executions>
