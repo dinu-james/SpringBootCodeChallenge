@@ -2,6 +2,7 @@ package com.telstra.codechallenge.service;
 
 import com.telstra.codechallenge.DTO.UserList;
 import com.telstra.codechallenge.DTO.User;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -12,6 +13,12 @@ import java.util.stream.Collectors;
 
 @Service
 public class UserService {
+
+    @Value("${git.base.url}")
+    private String gitBaseUrl;
+
+    @Value("${git.path.url}")
+    private String gitPath;
 
     public List<User> getOldUserAccounts(long noOfAccounts) {
         RestTemplate restTemplate = new RestTemplate();
@@ -24,8 +31,8 @@ public class UserService {
     }
 
     private URI getUri() {
-        return UriComponentsBuilder.fromUriString("https://api.github.com")
-                .path("/search/users")
+        return UriComponentsBuilder.fromUriString(gitBaseUrl)
+                .path(gitPath)
                 .queryParam("q","followers:0")
                 .queryParam("sort","joined")
                 .queryParam("order","asc")
